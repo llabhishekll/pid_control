@@ -155,6 +155,15 @@ private:
       // calculate total gain
       float output = p + i + d;
 
+      // output with limits
+      if (output > pid_angle.output_max) {
+        output = pid_angle.output_max;
+      } else if (output < pid_angle.output_min) {
+        output = pid_angle.output_min;
+      } else {
+        output = output;
+      }
+
       if (std::fabs(error) > 0.01) {
         // publish velocity
         message.angular.z = output;
@@ -214,15 +223,27 @@ int main(int argc, char *argv[]) {
 
   // waypoints for robot motion
   std::vector<std::vector<float>> waypoints;
-  waypoints = {
-      {0.0, 1, -1},
-      {0.0, 1, 0},
-      {0.0, 1, 1},
-  };
 
   // proportional integral derivative control for angle
   Control pid_angle{0.8, 0.01, 0.1, -1.0, 1.0, 0.0,
                     0.0, -1.0, 1.0, 0.0,  0.0, 0.0001};
+
+  if (std::atoi(argv[1]) == 2) {
+    // real lab paramters
+    waypoints = {
+        {0.0, 1.0, -0.25},
+        {0.0, 0.6, -1.45},
+    };
+    pid_angle.output_min = -0.7;
+    pid_angle.output_max = 0.7;
+  } else {
+    // simulation paramters
+    waypoints = {
+        {0.0, 1, -1},
+        {0.0, 1, 0},
+        {0.0, 1, 1},
+    };
+  }
 
   // initialize executor and node
   rclcpp::executors::MultiThreadedExecutor executor;
