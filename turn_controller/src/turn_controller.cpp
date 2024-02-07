@@ -150,7 +150,7 @@ private:
 
       // log error and gain
       RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
-                           "%f : [%f, %f, %f] %f", error, p, i, d, yaw);
+                           "%f : [%f, %f, %f] %f", error_prime, p, i, d, yaw);
 
       // calculate total gain
       float output = p + i + d;
