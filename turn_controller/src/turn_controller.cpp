@@ -140,9 +140,12 @@ private:
       float error = std::atan2(dy, dx) - yaw;
       float measurement = yaw;
 
+      // fix : smallest difference between two angles around a point
+      float error_prime = std::atan2(std::sin(error), std::cos(error));
+
       // get proportional, integral and differential gain
-      float p = pid_angle.get_proportional_gain(error);
-      float i = pid_angle.get_integral_gain(error);
+      float p = pid_angle.get_proportional_gain(error_prime);
+      float i = pid_angle.get_integral_gain(error_prime);
       float d = pid_angle.get_differential_gain(measurement);
 
       // log error and gain
