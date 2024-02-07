@@ -218,8 +218,8 @@ int main(int argc, char *argv[]) {
   };
 
   // proportional integral derivative control for angle
-  Control pid_angle{0.8, 0.01, 0.1, 0.0, 1.5, 0.0,
-                    0.0, 0.0,  1.5, 0.0, 0.0, 0.0001};
+  Control pid_angle{0.8, 0.01, 0.1, -1.0, 1.0, 0.0,
+                    0.0, -1.0, 1.0, 0.0,  0.0, 0.0001};
 
   // initialize executor and node
   rclcpp::executors::MultiThreadedExecutor executor;
