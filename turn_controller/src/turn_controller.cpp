@@ -149,7 +149,7 @@ private:
       float d = pid_angle.get_differential_gain(measurement);
 
       // log error and gain
-      RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
+      RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 100,
                            "%f : [%f, %f, %f] %f", error_prime, p, i, d, yaw);
 
       // calculate total gain
@@ -225,14 +225,15 @@ int main(int argc, char *argv[]) {
   std::vector<std::vector<float>> waypoints;
 
   // proportional integral derivative control for angle
-  Control pid_angle{0.8, 0.01, 0.1, -1.0, 1.0, 0.0,
+  Control pid_angle{1.5, 0.01, 0.1, -1.0, 1.0, 0.0,
                     0.0, -1.0, 1.0, 0.0,  0.0, 0.0001};
 
   if (std::atoi(argv[1]) == 2) {
     // real lab paramters
     waypoints = {
-        {0.0, 1.0, -0.25},
-        {0.0, 0.6, -1.45},
+        {0.0, 1.0, 0.0}, // fake waypoint
+        {0.0, 1.0, -0.4},
+        {0.0, 0.63, -1.25},
     };
     pid_angle.output_min = -0.4;
     pid_angle.output_max = 0.4;
@@ -243,7 +244,6 @@ int main(int argc, char *argv[]) {
         {0.0, 1, 0},
         {0.0, 1, 1},
     };
-    pid_angle.Kp = 1.5;
     pid_angle.output_min = -1.5;
     pid_angle.output_max = 1.5;
   }
