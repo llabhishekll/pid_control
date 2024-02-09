@@ -234,8 +234,8 @@ int main(int argc, char *argv[]) {
         {0.0, 1.0, -0.25},
         {0.0, 0.6, -1.45},
     };
-    pid_angle.output_min = -0.7;
-    pid_angle.output_max = 0.7;
+    pid_angle.output_min = -0.4;
+    pid_angle.output_max = 0.4;
   } else {
     // simulation paramters
     waypoints = {
@@ -243,6 +243,9 @@ int main(int argc, char *argv[]) {
         {0.0, 1, 0},
         {0.0, 1, 1},
     };
+    pid_angle.Kp = 1.5;
+    pid_angle.output_min = -1.5;
+    pid_angle.output_max = 1.5;
   }
 
   // initialize executor and node
