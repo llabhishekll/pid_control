@@ -133,6 +133,9 @@ private:
     pid_angle.integrator = 0.0;
     pid_angle.previous_error = 0.0;
 
+    // loop rate 25hz i.e. 0.04 seconds
+    rclcpp::Rate loop_rate(25);
+
     // loop till target done
     while (rclcpp::ok()) {
       float dx = x - px;
@@ -148,10 +151,6 @@ private:
       float i = pid_angle.get_integral_gain(error_prime);
       float d = pid_angle.get_differential_gain(measurement);
 
-      // log error and gain
-      RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 100,
-                           "%f : [%f, %f, %f] %f", error_prime, p, i, d, yaw);
-
       // calculate total gain
       float output = p + i + d;
 
@@ -164,10 +163,17 @@ private:
         output = output;
       }
 
-      if (std::fabs(error) > 0.01) {
+      // log error and gain
+      RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 100,
+                           "%f : %f [%f, %f, %f]", yaw, output, p, i, d);
+
+      if (std::fabs(error_prime) > 0.05) {
         // publish velocity
         message.angular.z = output;
         this->publisher_cmd_vel->publish(message);
+
+        // sleep for the remaining time
+        loop_rate.sleep();
       } else {
         break;
       }
@@ -225,18 +231,18 @@ int main(int argc, char *argv[]) {
   std::vector<std::vector<float>> waypoints;
 
   // proportional integral derivative control for angle
-  Control pid_angle{1.5, 0.01, 0.1, -1.0, 1.0, 0.0,
-                    0.0, -1.0, 1.0, 0.0,  0.0, 0.0001};
+  Control pid_angle{2.0, 0.001, 0.4, -1.0, 1.0, 0.0,
+                    0.0, -1.0,  1.0, 0.0,  0.0, 0.04};
 
   if (std::atoi(argv[1]) == 2) {
     // real lab paramters
     waypoints = {
-        {0.0, 1.0, 0.0}, // fake waypoint
-        {0.0, 1.0, -0.4},
-        {0.0, 0.63, -1.25},
+        {0.0, 20, -20}, // fake waypoint
+        {0.0, 20, 0},
+        {0.0, 20, 20},
     };
-    pid_angle.output_min = -0.4;
-    pid_angle.output_max = 0.4;
+    pid_angle.output_min = -2.8;
+    pid_angle.output_max = 2.8;
   } else {
     // simulation paramters
     waypoints = {
@@ -244,8 +250,8 @@ int main(int argc, char *argv[]) {
         {0.0, 1, 0},
         {0.0, 1, 1},
     };
-    pid_angle.output_min = -1.5;
-    pid_angle.output_max = 1.5;
+    pid_angle.output_min = -2.8;
+    pid_angle.output_max = 2.8;
   }
 
   // initialize executor and node

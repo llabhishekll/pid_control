@@ -133,29 +133,44 @@ private:
     pid_distance.integrator = 0.0;
     pid_distance.previous_error = 0.0;
 
+    // loop rate 25hz i.e. 0.04 seconds
+    rclcpp::Rate loop_rate(25);
+
     // loop till target done
     while (rclcpp::ok()) {
       float dx = x - px;
       float dy = y - py;
       float error = std::sqrt(dx * dx + dy * dy);
-      float measurement = std::sqrt(x * x + y * y);
+      float measurement = std::sqrt(px * px + py * py);
 
       // get proportional, integral and differential gain
       float p = pid_distance.get_proportional_gain(error);
       float i = pid_distance.get_integral_gain(error);
       float d = pid_distance.get_differential_gain(measurement);
 
-      // log error and gain
-      RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500,
-                           "%f : [%f, %f, %f]", error, p, i, d);
-
       // calculate total gain
       float output = p + i + d;
+
+      // output with limits
+      if (output > pid_distance.output_max) {
+        output = pid_distance.output_max;
+      } else if (output < pid_distance.output_min) {
+        output = pid_distance.output_min;
+      } else {
+        output = output;
+      }
+
+      // log error and gain
+      RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 100,
+                           "%f : %f [%f, %f, %f]", px, output, p, i, d);
 
       if (std::fabs(error) > 0.05) {
         // publish velocity
         message.linear.x = output;
         this->publisher_cmd_vel->publish(message);
+
+        // sleep for the remaining time
+        loop_rate.sleep();
       } else {
         break;
       }
@@ -218,8 +233,8 @@ int main(int argc, char *argv[]) {
   };
 
   // proportional integral derivative control for distance
-  Control pid_distance{0.8, 0.01, 0.1, 0.0, 1.5, 0.0,
-                       0.0, 0.0,  1.5, 0.0, 0.0, 0.0001};
+  Control pid_distance{1.5, 0.001, 0.4, -1.5, 1.5, 0.0,
+                       0.0, -1.5,  1.5, 0.0,  0.0, 0.04};
 
   // initialize executor and node
   rclcpp::executors::MultiThreadedExecutor executor;
